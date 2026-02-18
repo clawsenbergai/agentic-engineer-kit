@@ -1,0 +1,9 @@
+{
+  "collectedAt": "2026-02-18T22:47:09.933Z",
+  "source": "agentic:demo",
+  "containsPolicy": true,
+  "containsRoi": true,
+  "containsEval": true,
+  "stdout": "\n> agentic-engineer-kit@0.3.0 agentic:demo\n> node scripts/demo-run.mjs\n\n=== Agentic Engineer Demo ===\nPolicy decision: { action: 'allow', reasons: [ 'Policy checks passed' ] }\nRun final state: {\n  runId: 'run_demo_001',\n  status: 'succeeded',\n  startedAt: '2026-02-18T22:47:09.921Z',\n  endedAt: '2026-02-18T22:47:09.922Z'\n}\nModel routing: { selected: 'gpt-4.1', fallback: 'gpt-4o-mini' }\nROI snapshot: { costPerSuccess: 2.5, valuePerTask: 12.5, automationRoi: 3 }\nRetry snapshot: { shouldRetry429: true, shouldRetryBadRequest: false }\nSecurity guard: {\n  flagged: true,\n  matches: [\n    'ignore\\\\s+(all|previous)\\\\s+instructions',\n    'reveal\\\\s+system\\\\s+prompt'\n  ]\n}\nTop memories: [\n  { id: 'm1', rankScore: 0.5678367782143118 },\n  { id: 'm2', rankScore: 0.04858698955189122 }\n]\nEval results: [\n  { id: 'dirty-data-null-company-id', passed: true },\n  { id: 'tool-failure-429', passed: true },\n  { id: 'budget-breach', passed: true }\n]\n",
+  "stderr": ""
+}

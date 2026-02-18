@@ -1,0 +1,37 @@
+[
+  {
+    "id": "dirty-data-null-company-id",
+    "input": {
+      "record": {
+        "companyId": null,
+        "email": "ops@example.com"
+      }
+    },
+    "expected": {
+      "valid": false,
+      "reason": "missing_company_id"
+    }
+  },
+  {
+    "id": "tool-failure-429",
+    "input": {
+      "errorCode": "429"
+    },
+    "expected": {
+      "retry": true
+    }
+  },
+  {
+    "id": "budget-breach",
+    "input": {
+      "projectedCostUsd": 20,
+      "expectedValueUsd": 5,
+      "riskLevel": "low",
+      "requestedTool": "search_web",
+      "selectedModel": "gpt-4.1"
+    },
+    "expected": {
+      "policyAction": "deny"
+    }
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-02-18T22:47:10.680Z",
+  "evidenceWeight": 0.7,
+  "quizWeight": 0.3,
+  "evidenceScore": 98.75,
+  "quizScore": 0,
+  "overall": 69.13,
+  "inputs": {
+    "testEvidence": true,
+    "demoEvidence": true,
+    "docEvidence": true
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "agentic-engineer-kit",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "workers/*",
+    "workflows/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "agentic:test": "node --test tests/*.test.mjs",
+    "agentic:demo": "node scripts/demo-run.mjs",
+    "agentic:check": "npm run agentic:test && npm run agentic:demo",
+    "agentic:tree": "find apps services workers workflows packages -maxdepth 2 -type f | sort",
+    "dashboard:collect:test": "node scripts/dashboard/collect-test-evidence.mjs",
+    "dashboard:collect:demo": "node scripts/dashboard/collect-demo-evidence.mjs",
+    "dashboard:collect:docs": "node scripts/dashboard/collect-doc-evidence.mjs",
+    "dashboard:snapshot": "node scripts/dashboard/refresh-snapshot.mjs",
+    "dashboard:refresh": "npm run dashboard:collect:test && npm run dashboard:collect:demo && npm run dashboard:collect:docs && npm run dashboard:snapshot",
+    "dashboard:dev": "npm run dev -w learning-dashboard",
+    "dashboard:build": "npm run build -w learning-dashboard",
+    "dashboard:test": "node --test apps/learning-dashboard/tests/*.test.mjs"
+  }
+}

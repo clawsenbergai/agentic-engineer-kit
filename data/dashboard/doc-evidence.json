@@ -1,0 +1,43 @@
+{
+  "collectedAt": "2026-02-18T22:47:10.315Z",
+  "source": "docs",
+  "coverage": [
+    {
+      "path": "learning/curriculum.md",
+      "exists": true
+    },
+    {
+      "path": "learning/reading-list.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tooling-landscape.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/a2a.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/webmcp.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/agent-payments.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/erc-8004.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/lang-suite.md",
+      "exists": true
+    },
+    {
+      "path": "learning/tracks/voice-agents.md",
+      "exists": true
+    }
+  ],
+  "coveragePercent": 100
+}

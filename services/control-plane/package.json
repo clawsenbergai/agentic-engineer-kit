@@ -1,0 +1,6 @@
+{
+  "name": "@agentic/service-control-plane",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module"
+}

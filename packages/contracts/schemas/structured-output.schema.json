@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentic-engineer-kit/schemas/task-result.json",
+  "title": "AgentTaskResult",
+  "type": "object",
+  "required": [
+    "task_id",
+    "status",
+    "summary",
+    "actions_taken",
+    "evidence",
+    "estimated_value_usd",
+    "confidence"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["succeeded", "failed", "needs_human_review"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 2000
+    },
+    "actions_taken": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      },
+      "minItems": 1,
+      "maxItems": 50
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "snippet"],
+        "additionalProperties": false,
+        "properties": {
+          "source": { "type": "string" },
+          "snippet": { "type": "string" }
+        }
+      },
+      "minItems": 1
+    },
+    "estimated_value_usd": {
+      "type": "number",
+      "minimum": -1000000,
+      "maximum": 1000000
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "@agentic/worker-queue-runner",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module"
+}
