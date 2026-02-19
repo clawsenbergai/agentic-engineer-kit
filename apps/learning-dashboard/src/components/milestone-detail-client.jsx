@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -23,6 +23,7 @@ import {
   Square,
   ExternalLink,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
 
 const STEP_ICONS = {
@@ -36,13 +37,13 @@ const STEP_ICONS = {
 };
 
 const STEP_EMOJI = {
-  read: "\uD83D\uDCD6",
-  watch: "\uD83C\uDFA5",
-  article: "\uD83D\uDCDD",
-  setup: "\uD83D\uDD27",
-  build: "\uD83C\uDFD7\uFE0F",
-  quiz: "\uD83E\uDDEA",
-  evidence: "\u2705",
+  read: "📖",
+  watch: "🎥",
+  article: "📝",
+  setup: "🔧",
+  build: "🏗️",
+  quiz: "🧪",
+  evidence: "✅",
 };
 
 function YouTubeEmbed({ url }) {
@@ -62,7 +63,7 @@ function YouTubeEmbed({ url }) {
   }
   
   return (
-    <div className="max-w-[560px] w-full">
+    <div className="max-w-[640px] w-full">
       <div className="aspect-video overflow-hidden rounded-lg border border-border/50 shadow-sm">
         <iframe
           src={`https://www.youtube.com/embed/${videoId}`}
@@ -76,7 +77,68 @@ function YouTubeEmbed({ url }) {
   );
 }
 
-function StepCard({ step, onToggle, onQuizSubmit, isSubmitting, isCurrentStep }) {
+function StepSidebarItem({ step, index, isSelected, onClick, onToggle }) {
+  const Icon = STEP_ICONS[step.type] || FileText;
+  
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+        "hover:bg-muted/50",
+        isSelected && "bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800",
+        step.completed && "opacity-75"
+      )}
+      onClick={() => onClick(step)}
+    >
+      {/* Step number */}
+      <div className={cn(
+        "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+        step.completed 
+          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
+          : isSelected
+          ? "bg-emerald-500 text-white" 
+          : "bg-muted text-muted-foreground"
+      )}>
+        {step.completed ? <Check className="h-3 w-3" /> : index + 1}
+      </div>
+      
+      {/* Step info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-1">
+          <span className="text-sm">{STEP_EMOJI[step.type]}</span>
+          <Badge variant="outline" className="text-xs capitalize px-1.5 py-0.5 text-[10px]">
+            {step.type}
+          </Badge>
+        </div>
+        <h4 className={cn(
+          "text-sm font-medium truncate",
+          step.completed ? "line-through text-muted-foreground" : "text-foreground"
+        )}>
+          {step.title}
+        </h4>
+      </div>
+      
+      {/* Completion checkbox */}
+      {step.type !== "quiz" && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle(step.id);
+          }}
+          className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+        >
+          {step.completed ? (
+            <CheckCircle className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <Square className="h-4 w-4" />
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function StepContent({ step, onToggle, onQuizSubmit, isSubmitting }) {
   const [answer, setAnswer] = useState("");
   const [quizResult, setQuizResult] = useState(null);
   const Icon = STEP_ICONS[step.type] || FileText;
@@ -93,165 +155,200 @@ function StepCard({ step, onToggle, onQuizSubmit, isSubmitting, isCurrentStep })
   };
 
   return (
-    <Card className={cn(
-      "border-border/50 transition-all relative hover:shadow-sm",
-      step.completed && "border-primary/20 bg-primary/5",
-      isCurrentStep && "border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm"
-    )}>
-      <CardContent className="p-3">
-        <div className="flex items-start gap-3">
-          {/* Completion checkbox */}
-          {step.type !== "quiz" && (
-            <button
-              onClick={() => onToggle(step.id)}
-              className="mt-1 text-muted-foreground transition-colors hover:text-primary flex-shrink-0"
-            >
-              {step.completed ? (
-                <Check className="h-4 w-4 text-primary" />
-              ) : (
-                <Square className="h-4 w-4" />
-              )}
-            </button>
-          )}
-
-          <div className="flex-1 space-y-2">
-            {/* Header */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm">{STEP_EMOJI[step.type]}</span>
-              <Badge variant="outline" className="text-xs capitalize px-1.5 py-0.5">
+    <div className="space-y-6">
+      {/* Step header */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">{STEP_EMOJI[step.type]}</span>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="text-sm capitalize px-2 py-1">
                 {step.type}
               </Badge>
-              {isCurrentStep && (
-                <Badge className="text-xs bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-100 dark:border-emerald-700 px-2 py-0.5">
-                  ← You are here
+              {step.completed && (
+                <Badge className="text-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+                  ✓ Completed
                 </Badge>
               )}
-              <h3 className={cn(
-                "text-sm font-medium text-foreground",
-                step.completed && "line-through text-muted-foreground"
-              )}>
-                {step.title}
-              </h3>
             </div>
-
-            {/* URL link for read/watch */}
-            {step.url && step.type === "watch" && (
-              <YouTubeEmbed url={step.url} />
-            )}
-            {step.url && step.type !== "watch" && (
-              <a
-                href={step.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Open resource
-              </a>
-            )}
-
-            {/* Markdown content */}
-            {step.contentMarkdown && (
-              <div className="prose prose-invert prose-sm max-w-none text-sm leading-relaxed text-muted-foreground 
-                [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:text-foreground [&_h1]:mt-4 [&_h1]:mb-2
-                [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-3 [&_h2]:mb-1.5
-                [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-2 [&_h3]:mb-1
-                [&_p]:my-2 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0.5
-                [&_strong]:text-foreground [&_strong]:font-medium
-                [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_code]:font-mono
-                [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:my-3 [&_pre]:text-xs
-                [&_blockquote]:border-l-2 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {step.contentMarkdown}
-                </ReactMarkdown>
-              </div>
-            )}
-
-            {/* Setup: validation command */}
-            {step.type === "setup" && step.validationCommand && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Verification command:</p>
-                <code className="block rounded-md bg-muted px-3 py-2 text-xs font-mono">
-                  {step.validationCommand}
-                </code>
-              </div>
-            )}
-
-            {/* Quiz: answer textarea + submit */}
-            {step.type === "quiz" && (
-              <div className="space-y-3 mt-1">
-                {quizResult ? (
-                  <div className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-sm">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={quizResult.score >= 70 ? "default" : quizResult.score >= 50 ? "outline" : "destructive"}>
-                        Score: {quizResult.score}/100
-                      </Badge>
-                      {quizResult.score >= 70 && <span className="text-sm text-emerald-600 dark:text-emerald-400">✓ Passed</span>}
-                    </div>
-                    <div className="text-sm text-muted-foreground leading-relaxed">
-                      <strong className="text-foreground">Feedback:</strong><br />
-                      {quizResult.feedback}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-medium text-foreground">Your Answer:</label>
-                      <Textarea
-                        placeholder="Write your answer here (minimum 20 characters)..."
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        className="min-h-[120px] resize-y text-sm leading-relaxed"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {answer.length}/20 characters minimum
-                      </p>
-                    </div>
-                    <Button
-                      onClick={handleQuizSubmit}
-                      disabled={isSubmitting || answer.trim().length < 20}
-                      size="sm"
-                      className="gap-2"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Scoring...
-                        </>
-                      ) : (
-                        <>
-                          <HelpCircle className="h-4 w-4" />
-                          Submit Answer
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Evidence: link prompt */}
-            {step.type === "evidence" && !step.completed && (
-              <p className="text-xs text-muted-foreground italic">
-                Link an artifact as proof of completion to check this off.
-              </p>
-            )}
+            <h2 className="text-2xl font-bold text-foreground">{step.title}</h2>
           </div>
         </div>
-      </CardContent>
-    </Card>
+        
+        {/* Completion toggle for non-quiz steps */}
+        {step.type !== "quiz" && (
+          <Button
+            variant={step.completed ? "secondary" : "default"}
+            onClick={() => onToggle(step.id)}
+            className="gap-2"
+          >
+            {step.completed ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                Mark as incomplete
+              </>
+            ) : (
+              <>
+                <Square className="h-4 w-4" />
+                Mark as complete
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Content */}
+      <div className="space-y-6">
+        {/* URL link for watch (YouTube embed) */}
+        {step.url && step.type === "watch" && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Video Content</h3>
+            <YouTubeEmbed url={step.url} />
+          </div>
+        )}
+        
+        {/* URL link for other types */}
+        {step.url && step.type !== "watch" && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">External Resource</h3>
+            <a
+              href={step.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Open resource
+            </a>
+          </div>
+        )}
+
+        {/* Markdown content */}
+        {step.contentMarkdown && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Instructions</h3>
+            <div className="prose prose-invert max-w-none text-base leading-relaxed
+              [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-foreground [&_h1]:mt-6 [&_h1]:mb-3
+              [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-4 [&_h2]:mb-2
+              [&_h3]:text-base [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-3 [&_h3]:mb-2
+              [&_p]:my-3 [&_ul]:my-3 [&_ol]:my-3 [&_li]:my-1
+              [&_strong]:text-foreground [&_strong]:font-semibold
+              [&_code]:rounded [&_code]:bg-muted [&_code]:px-2 [&_code]:py-1 [&_code]:text-sm [&_code]:font-mono
+              [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:my-4 [&_pre]:text-sm
+              [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {step.contentMarkdown}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
+
+        {/* Setup: validation command */}
+        {step.type === "setup" && step.validationCommand && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Verification</h3>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Run this command to verify setup:</p>
+              <code className="block rounded-lg bg-muted px-4 py-3 text-sm font-mono">
+                {step.validationCommand}
+              </code>
+            </div>
+          </div>
+        )}
+
+        {/* Quiz: answer textarea + submit */}
+        {step.type === "quiz" && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">Quiz</h3>
+            {quizResult ? (
+              <Card className="border-border bg-card shadow-sm">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Badge variant={quizResult.score >= 70 ? "default" : quizResult.score >= 50 ? "outline" : "destructive"} className="text-sm">
+                      Score: {quizResult.score}/100
+                    </Badge>
+                    {quizResult.score >= 70 && (
+                      <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">✓ Passed</span>
+                    )}
+                  </div>
+                  <div className="text-base text-muted-foreground leading-relaxed">
+                    <strong className="text-foreground">Feedback:</strong><br />
+                    {quizResult.feedback}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Your Answer:</label>
+                  <Textarea
+                    placeholder="Write your answer here (minimum 20 characters)..."
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    className="min-h-[150px] resize-y text-base leading-relaxed"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {answer.length}/20 characters minimum
+                  </p>
+                </div>
+                <Button
+                  onClick={handleQuizSubmit}
+                  disabled={isSubmitting || answer.trim().length < 20}
+                  size="lg"
+                  className="gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scoring...
+                    </>
+                  ) : (
+                    <>
+                      <HelpCircle className="h-4 w-4" />
+                      Submit Answer
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Evidence: link prompt */}
+        {step.type === "evidence" && !step.completed && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Evidence Required</h3>
+            <p className="text-base text-muted-foreground italic">
+              Link an artifact as proof of completion to check this step off.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
 export function MilestoneDetailClient({ milestone, track, initialSteps, evidence, gaps, trackId }) {
   const [steps, setSteps] = useState(initialSteps);
+  const [selectedStep, setSelectedStep] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const completedCount = steps.filter((s) => s.completed).length;
   const progressPct = steps.length > 0 ? (completedCount / steps.length) * 100 : 0;
   
-  // Find the first incomplete step to highlight as current
-  const currentStep = steps.find(step => !step.completed);
+  // Auto-select first incomplete step on load, or first step if all complete
+  useEffect(() => {
+    if (steps.length > 0 && !selectedStep) {
+      const firstIncomplete = steps.find(step => !step.completed);
+      setSelectedStep(firstIncomplete || steps[0]);
+    }
+  }, [steps, selectedStep]);
+
+  const handleStepClick = useCallback((step) => {
+    setSelectedStep(step);
+  }, []);
 
   const handleToggle = useCallback(async (stepId) => {
     // Optimistic update
@@ -320,11 +417,11 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
     }
   }, [milestone]);
 
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex flex-col gap-8">
-        {/* Header - Course lesson style */}
-        <div className="space-y-4">
+  if (steps.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="space-y-6">
+          {/* Header */}
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">{milestone.title}</h1>
             {milestone.theoryMarkdown && (
@@ -336,52 +433,92 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
             )}
           </div>
           
-          {/* Progress section */}
-          <div className="bg-card/50 border border-border/50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">Lesson Progress</span>
-              <span className="text-sm font-medium tabular-nums text-primary">
-                {completedCount}/{steps.length} completed
-              </span>
+          <Card className="border-dashed">
+            <CardContent className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <BookOpen className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                <p className="text-lg text-muted-foreground">
+                  No steps defined for this milestone yet.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">{milestone.title}</h1>
+          {milestone.theoryMarkdown && (
+            <div className="prose prose-invert prose-base max-w-none text-muted-foreground leading-relaxed">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {milestone.theoryMarkdown}
+              </ReactMarkdown>
             </div>
-            <Progress value={progressPct} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-2">
-              Complete all steps to finish this milestone
-            </p>
-          </div>
+          )}
         </div>
 
-        {/* Steps - Lesson content */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Lesson Steps</h2>
-          <div className="flex flex-col gap-2">
-            {steps.map((step, index) => (
-              <div key={step.id} className="relative">
-                {/* Step number indicator */}
-                <div className="absolute -left-8 top-3 w-6 h-6 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
-                  <span className="text-xs font-bold text-primary">{index + 1}</span>
+        {/* Two-column layout */}
+        <div className="grid grid-cols-12 gap-8">
+          {/* Main content area - 70% */}
+          <div className="col-span-8">
+            {selectedStep ? (
+              <StepContent
+                step={selectedStep}
+                onToggle={handleToggle}
+                onQuizSubmit={handleQuizSubmit}
+                isSubmitting={isSubmitting}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <BookOpen className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                  <p className="text-lg text-muted-foreground">Select a step to begin</p>
                 </div>
-                <StepCard
-                  step={step}
-                  onToggle={handleToggle}
-                  onQuizSubmit={handleQuizSubmit}
-                  isSubmitting={isSubmitting}
-                  isCurrentStep={currentStep && currentStep.id === step.id}
-                />
               </div>
-            ))}
-            {steps.length === 0 && (
-              <Card className="border-dashed">
-                <CardContent className="flex items-center justify-center p-8">
-                  <div className="text-center">
-                    <BookOpen className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">
-                      No steps defined for this milestone yet.
-                    </p>
+            )}
+          </div>
+
+          {/* Sidebar - 30% */}
+          <div className="col-span-4">
+            <div className="sticky top-6 space-y-6">
+              {/* Progress */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Progress</span>
+                    <span className="text-sm font-medium tabular-nums text-primary">
+                      {completedCount}/{steps.length} steps completed
+                    </span>
                   </div>
+                  <Progress value={progressPct} className="h-2" />
                 </CardContent>
               </Card>
-            )}
+
+              {/* Steps navigation */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Course Steps</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-2">
+                  {steps.map((step, index) => (
+                    <StepSidebarItem
+                      key={step.id}
+                      step={step}
+                      index={index}
+                      isSelected={selectedStep && selectedStep.id === step.id}
+                      onClick={handleStepClick}
+                      onToggle={handleToggle}
+                    />
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
