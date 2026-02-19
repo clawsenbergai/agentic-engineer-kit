@@ -25,7 +25,7 @@ export default async function TrackDetailPage({ params }) {
   const trackPct = totalSteps > 0 ? Math.round((totalCompleted / totalSteps) * 100) : 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground">
