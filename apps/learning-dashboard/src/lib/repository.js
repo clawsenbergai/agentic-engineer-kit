@@ -48,6 +48,21 @@ function fromTrackRow(row) {
   };
 }
 
+function fromStepRow(row) {
+  return {
+    id: row.id,
+    milestoneId: row.milestone_id,
+    orderIndex: row.order_index,
+    type: row.type,
+    title: row.title,
+    contentMarkdown: row.content_markdown,
+    url: row.url,
+    validationCommand: row.validation_command,
+    completed: row.completed,
+    completedAt: row.completed_at,
+  };
+}
+
 function toMilestoneRow(milestone) {
   return {
     id: milestone.id,
@@ -238,16 +253,17 @@ async function loadSupabaseStore() {
 
   await ensureSupabaseSeed(client);
 
-  const [tracksRes, milestonesRes, artifactsRes, quizQuestionsRes, quizResponsesRes, weightRes] = await Promise.all([
+  const [tracksRes, milestonesRes, stepsRes, artifactsRes, quizQuestionsRes, quizResponsesRes, weightRes] = await Promise.all([
     client.from("tracks").select("*").order("order_index", { ascending: true }),
     client.from("milestones").select("*").order("order_index", { ascending: true }),
+    client.from("steps").select("*").order("order_index", { ascending: true }),
     client.from("artifacts").select("*").order("created_at", { ascending: false }),
     client.from("quiz_questions").select("*").order("created_at", { ascending: false }),
     client.from("quiz_responses").select("*").order("created_at", { ascending: false }),
     client.from("track_weights").select("*").eq("id", "default").single(),
   ]);
 
-  for (const result of [tracksRes, milestonesRes, artifactsRes, quizQuestionsRes, quizResponsesRes]) {
+  for (const result of [tracksRes, milestonesRes, stepsRes, artifactsRes, quizQuestionsRes, quizResponsesRes]) {
     if (result.error) {
       throw new Error(result.error.message);
     }
@@ -260,6 +276,7 @@ async function loadSupabaseStore() {
     store: {
       tracks: (tracksRes.data || []).map(fromTrackRow),
       milestones: (milestonesRes.data || []).map(fromMilestoneRow),
+      steps: (stepsRes.data || []).map(fromStepRow),
       artifacts: (artifactsRes.data || []).map(fromArtifactRow),
       quizQuestions: (quizQuestionsRes.data || []).map(fromQuizQuestionRow),
       quizResponses: (quizResponsesRes.data || []).map(fromQuizResponseRow),
