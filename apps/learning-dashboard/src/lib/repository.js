@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { DEMO_ARTIFACTS, MILESTONES, TRACKS, createInitialStore } from "./seed-data.js";
+import { DEMO_ARTIFACTS, MILESTONES, STEPS, TRACKS, createInitialStore } from "./seed-data.js";
 import { computeDashboardState } from "./core.js";
 import { getSupabaseServerClient, isSupabaseConfigured } from "./supabase.js";
 
@@ -45,6 +45,22 @@ function fromTrackRow(row) {
     orderIndex: row.order_index,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function toStepRow(step) {
+  return {
+    id: step.id,
+    milestone_id: step.milestoneId,
+    order_index: step.orderIndex,
+    type: step.type,
+    title: step.title,
+    content_markdown: step.contentMarkdown || "",
+    url: step.url || null,
+    validation_command: step.validationCommand || null,
+    completed: step.completed || false,
+    completed_at: step.completedAt || null,
+    notes: step.notes || "",
   };
 }
 
@@ -202,7 +218,17 @@ async function ensureSupabaseSeed(client) {
     throw new Error(`Cannot check milestones seed state: ${existingMilestonesError.message}`);
   }
 
-  if (existingMilestones.length > 0) return;
+  // Check if steps need seeding (might have milestones but no steps from earlier seed)
+  const { data: existingSteps } = await client.from("steps").select("id").limit(1);
+  const needsStepSeed = !existingSteps || existingSteps.length === 0;
+
+  if (existingMilestones.length > 0 && !needsStepSeed) return;
+  if (existingMilestones.length > 0 && needsStepSeed) {
+    // Only seed steps
+    const { error: stepInsertError } = await client.from("steps").upsert(STEPS.map(toStepRow), { onConflict: "id" });
+    if (stepInsertError) throw new Error(`Cannot seed steps: ${stepInsertError.message}`);
+    return;
+  }
 
   const { error: trackInsertError } = await client.from("tracks").upsert(TRACKS.map(toTrackRow), {
     onConflict: "id",
@@ -218,6 +244,14 @@ async function ensureSupabaseSeed(client) {
 
   if (milestoneInsertError) {
     throw new Error(`Cannot seed milestones: ${milestoneInsertError.message}`);
+  }
+
+  const { error: stepInsertError } = await client.from("steps").upsert(STEPS.map(toStepRow), {
+    onConflict: "id",
+  });
+
+  if (stepInsertError) {
+    throw new Error(`Cannot seed steps: ${stepInsertError.message}`);
   }
 
   if (process.env.LEARNING_DEMO_SEED === "1") {
@@ -302,11 +336,13 @@ async function loadSupabaseStore() {
 
 async function loadStore() {
   if (isSupabaseConfigured()) {
-    return loadSupabaseStore();
+    const result = await loadSupabaseStore();
+    return { ...result, mode: "supabase" };
   }
   return {
     client: null,
     store: getMemoryStore(),
+    mode: "memory",
   };
 }
 
@@ -722,6 +758,7 @@ export async function saveStepNotes(stepId, notes) {
   if (mode === "supabase" && client) {
     const { error } = await client.from("steps").update({ notes }).eq("id", stepId);
     if (error) throw new Error(error.message);
+    return { ok: true };
   }
   const step = (store.steps || []).find((s) => s.id === stepId);
   if (step) step.notes = notes;
@@ -730,17 +767,30 @@ export async function saveStepNotes(stepId, notes) {
 
 export async function toggleStepComplete(stepId) {
   const { store, client, mode } = await loadStore();
+
+  if (mode === "supabase" && client) {
+    // Read current state from DB
+    const { data: row, error: readErr } = await client
+      .from("steps")
+      .select("completed")
+      .eq("id", stepId)
+      .single();
+    if (readErr || !row) return null;
+
+    const newCompleted = !row.completed;
+    const completedAt = newCompleted ? nowIso() : null;
+    const { error } = await client.from("steps").update({
+      completed: newCompleted,
+      completed_at: completedAt,
+    }).eq("id", stepId);
+    if (error) console.error("toggle error:", error.message);
+    return { id: stepId, completed: newCompleted, completedAt };
+  }
+
   const step = (store.steps || []).find((s) => s.id === stepId);
   if (!step) return null;
   step.completed = !step.completed;
   step.completedAt = step.completed ? nowIso() : null;
-  if (mode === "supabase" && client) {
-    const { error } = await client.from("steps").update({
-      completed: step.completed,
-      completed_at: step.completedAt,
-    }).eq("id", stepId);
-    if (error) console.error("toggle error:", error.message);
-  }
   return step;
 }
 
