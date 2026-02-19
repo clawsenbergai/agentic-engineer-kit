@@ -57,7 +57,7 @@ function StepNotes({ stepId, initialNotes }) {
       </div>
       <Textarea value={notes} onChange={handleChange}
         placeholder="What did you learn? What's still unclear?"
-        className="min-h-[100px] resize-y text-sm border-2 border-zinc-600 bg-zinc-900/50 focus:bg-zinc-900 focus:border-emerald-500 transition-colors rounded-lg placeholder:text-zinc-500" />
+        className="min-h-[100px] resize-y text-sm border border-zinc-500 bg-zinc-900/50 focus:bg-zinc-900 focus:border-emerald-500 transition-colors rounded-lg placeholder:text-zinc-500" />
     </div>
   );
 }
@@ -189,7 +189,7 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-100px)]">
+    <div className="flex min-h-[calc(100vh-120px)]">
       {/* Content */}
       <div className="flex-1 min-w-0 pr-8">
         <h1 className="text-xl font-bold tracking-tight">{milestone.title}</h1>
