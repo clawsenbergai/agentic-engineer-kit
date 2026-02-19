@@ -57,7 +57,7 @@ function StepNotes({ stepId, initialNotes }) {
       </div>
       <Textarea value={notes} onChange={handleChange}
         placeholder="What did you learn? What's still unclear?"
-        className="min-h-[100px] resize-y text-sm border border-border/40 bg-muted/20 focus:bg-muted/40 focus:border-emerald-800/50 transition-colors rounded-lg" />
+        className="min-h-[100px] resize-y text-sm border-2 border-zinc-600 bg-zinc-900/50 focus:bg-zinc-900 focus:border-emerald-500 transition-colors rounded-lg placeholder:text-zinc-500" />
     </div>
   );
 }
