@@ -189,9 +189,9 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-120px)]">
+    <div className="min-h-[calc(100vh-120px)] pr-64">
       {/* Content */}
-      <div className="flex-1 min-w-0 pr-8">
+      <div className="max-w-3xl">
         <h1 className="text-xl font-bold tracking-tight">{milestone.title}</h1>
         <p className="text-sm text-muted-foreground mt-1 mb-8">{milestone.theoryMarkdown}</p>
 
@@ -201,9 +201,9 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
         )}
       </div>
 
-      {/* Sidebar */}
-      <aside className="w-60 shrink-0 border-l border-border/20">
-        <div className="sticky top-0 h-screen overflow-y-auto py-4 pl-4 pr-2">
+      {/* Sidebar - fixed to right edge, full height */}
+      <aside className="fixed top-0 right-0 w-60 h-screen border-l border-border/20 bg-background z-30">
+        <div className="h-full overflow-y-auto py-4 pl-4 pr-2">
           <div className="flex items-center justify-between text-xs mb-1">
             <span className="text-muted-foreground">Progress</span>
             <span className="font-medium tabular-nums">{completedCount}/{steps.length}</span>
