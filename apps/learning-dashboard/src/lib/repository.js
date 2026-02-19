@@ -60,6 +60,7 @@ function fromStepRow(row) {
     validationCommand: row.validation_command,
     completed: row.completed,
     completedAt: row.completed_at,
+    notes: row.notes || "",
   };
 }
 
@@ -714,6 +715,18 @@ export async function getStepsForMilestone(milestoneId) {
   return (store.steps || [])
     .filter((step) => step.milestoneId === milestoneId)
     .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+export async function saveStepNotes(stepId, notes) {
+  const { client, mode } = await loadStore();
+  if (mode === "supabase" && client) {
+    const { error } = await client.from("steps").update({ notes }).eq("id", stepId);
+    if (error) throw new Error(error.message);
+  }
+  const { store } = await loadStore();
+  const step = (store.steps || []).find((s) => s.id === stepId);
+  if (step) step.notes = notes;
+  return { ok: true };
 }
 
 export async function toggleStepComplete(stepId) {

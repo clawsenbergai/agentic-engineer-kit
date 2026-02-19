@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -47,6 +47,41 @@ function YouTubeEmbed({ url }) {
           className="h-full w-full" allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
       </div>
+    </div>
+  );
+}
+
+function StepNotes({ stepId, initialNotes }) {
+  const [notes, setNotes] = useState(initialNotes || "");
+  const [saving, setSaving] = useState(false);
+  const timeoutRef = useRef(null);
+
+  const save = useCallback(async (text) => {
+    setSaving(true);
+    try {
+      await fetch(`/api/steps/${stepId}/notes`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: text }),
+      });
+    } catch {} finally { setSaving(false); }
+  }, [stepId]);
+
+  const handleChange = (e) => {
+    const text = e.target.value;
+    setNotes(text);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => save(text), 1000);
+  };
+
+  return (
+    <div className="space-y-1.5 pt-6 border-t border-border/20">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-muted-foreground">My Notes</label>
+        {saving && <span className="text-[10px] text-muted-foreground">Saving...</span>}
+      </div>
+      <Textarea value={notes} onChange={handleChange}
+        placeholder="Write your learning notes here... What did you learn? What's still unclear?"
+        className="min-h-[80px] resize-y text-sm bg-transparent border-border/30 focus:border-border" />
     </div>
   );
 }
@@ -141,7 +176,8 @@ function StepContent({ step, onToggle, onQuizSubmit, isSubmitting }) {
         </p>
       )}
 
-      {/* Evidence */}
+      {/* Notes */}
+      <StepNotes stepId={step.id} initialNotes={step.notes} key={step.id} />
     </div>
   );
 }
