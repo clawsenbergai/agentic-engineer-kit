@@ -1,47 +1,43 @@
 import { getSettingsHealth } from "@/lib/repository";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function SettingsPage() {
-  const health = await getSettingsHealth();
+  let health = null;
+  try { health = await getSettingsHealth(); } catch { health = null; }
 
   return (
-    <div className="page-stack">
-      <header className="section-head">
-        <h1>Settings</h1>
-        <p className="muted-text">Single-user mode, provider health, and local auth token hints.</p>
-      </header>
+    <div className="flex flex-col gap-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-sm text-muted-foreground">Dashboard configuration and system health.</p>
+      </div>
 
-      <section className="settings-card">
-        <h2>Environment health</h2>
-        <dl>
-          <div className="settings-row">
-            <dt>Storage mode</dt>
-            <dd>{health.mode}</dd>
-          </div>
-          <div className="settings-row">
-            <dt>Claude</dt>
-            <dd>{health.providerStatus.claude}</dd>
-          </div>
-          <div className="settings-row">
-            <dt>OpenAI fallback</dt>
-            <dd>{health.providerStatus.openai}</dd>
-          </div>
-          <div className="settings-row">
-            <dt>Owner token required</dt>
-            <dd>{health.auth.ownerTokenRequired ? "yes" : "no"}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="settings-card">
-        <h2>Owner token (browser)</h2>
-        <p className="muted-text">
-          If `DASHBOARD_OWNER_TOKEN` is enabled, save it in localStorage key
-          `learning_dashboard_owner_token` to use API actions from the UI.
-        </p>
-        <pre className="code-block">
-          {'localStorage.setItem("learning_dashboard_owner_token", "your-token")'}
-        </pre>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm">System Health</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {health ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Storage mode</span>
+                <Badge variant={health.mode === "supabase" ? "default" : "secondary"}>{health.mode}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">OpenAI</span>
+                <Badge variant={health.providerStatus?.openai === "configured" ? "default" : "destructive"}>{health.providerStatus?.openai || "unknown"}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Claude</span>
+                <Badge variant={health.providerStatus?.claude === "configured" ? "default" : "secondary"}>{health.providerStatus?.claude || "unknown"}</Badge>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">Unable to load health status.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

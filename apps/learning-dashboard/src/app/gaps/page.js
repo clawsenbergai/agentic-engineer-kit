@@ -1,47 +1,39 @@
-import Link from "next/link";
-
-import { StatusBadge } from "@/components/status-badge";
-import { getGaps, getNextAction } from "@/lib/repository";
+import { getGaps } from "@/lib/repository";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function GapsPage() {
-  const [gaps, nextAction] = await Promise.all([getGaps(), getNextAction()]);
+  let gaps = [];
+  try { gaps = await getGaps(); } catch { gaps = []; }
 
   return (
-    <div className="page-stack">
-      <header className="section-head">
-        <h1>Gap queue</h1>
-        <p className="muted-text">Resolve open high-severity gaps before opening new tracks.</p>
-      </header>
-
-      <section className="next-action-card">
-        <p className="next-action-label">Top recommendation</p>
-        <h3>{nextAction.actionText}</h3>
-        <Link href={nextAction.ctaPath} className="primary-button">
-          Open action
-        </Link>
-      </section>
-
-      <div className="gap-list">
-        {gaps.length ? (
-          gaps.map((gap) => (
-            <article key={gap.id} className="gap-row">
-              <div>
-                <p>{gap.title}</p>
-                <p className="muted-text">{gap.detail}</p>
-              </div>
-              <div className="gap-row-meta">
-                <StatusBadge status={gap.status} />
-                <span className={`severity severity-${gap.severity}`}>{gap.severity}</span>
-                <Link className="ghost-button" href={`/tracks/${gap.trackId}`}>
-                  fix
-                </Link>
-              </div>
-            </article>
-          ))
-        ) : (
-          <p className="muted-text">No open gaps. Keep validating with fresh evidence.</p>
-        )}
+    <div className="flex flex-col gap-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Gaps</h1>
+        <p className="text-sm text-muted-foreground">Knowledge gaps identified across your learning tracks.</p>
       </div>
+
+      {gaps.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex items-center justify-center p-12">
+            <p className="text-sm text-muted-foreground">No gaps identified yet. Complete quizzes and milestones to discover gaps.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {gaps.map((gap) => (
+            <Card key={gap.id} className="border-border/50">
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{gap.title}</p>
+                  <p className="text-xs text-muted-foreground">{gap.detail}</p>
+                </div>
+                <Badge variant={gap.severity === "high" ? "destructive" : gap.severity === "medium" ? "outline" : "secondary"}>{gap.severity}</Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

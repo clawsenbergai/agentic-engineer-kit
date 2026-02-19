@@ -1,39 +1,39 @@
-import Link from "next/link";
-
-import { StatusBadge } from "@/components/status-badge";
-import { formatDate } from "@/lib/format";
 import { getAllEvidence } from "@/lib/repository";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default async function EvidencePage() {
   const evidence = await getAllEvidence();
 
   return (
-    <div className="page-stack">
-      <header className="section-head">
-        <h1>Evidence explorer</h1>
-        <p className="muted-text">Only trusted evidence should influence your score and next action.</p>
-      </header>
-
-      <div className="evidence-list">
-        {evidence.map((item) => (
-          <article className="evidence-row" key={item.id}>
-            <div>
-              <h3>{item.title}</h3>
-              <p className="muted-text">{item.description}</p>
-              <p className="muted-text">
-                {item.trackName} • {item.milestoneTitle || "Unmapped milestone"} • {formatDate(item.updatedAt)}
-              </p>
-            </div>
-            <div className="evidence-row-meta">
-              <StatusBadge status={item.status} />
-              <span className="project-badge">{item.projectSource}</span>
-              <Link href={`/tracks/${item.trackId}`} className="ghost-button">
-                open track
-              </Link>
-            </div>
-          </article>
-        ))}
+    <div className="flex flex-col gap-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Evidence</h1>
+        <p className="text-sm text-muted-foreground">Artifacts and proof of completed work.</p>
       </div>
+
+      {evidence.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex items-center justify-center p-12">
+            <p className="text-sm text-muted-foreground">No evidence linked yet. Complete milestones and link artifacts to build your evidence.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {evidence.map((item) => (
+            <Card key={item.id} className="border-border/50">
+              <CardContent className="flex items-center justify-between p-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.description}</p>
+                  <p className="text-xs text-muted-foreground">{item.trackName} → {item.milestoneTitle || "Unmapped"}</p>
+                </div>
+                <Badge variant={item.status === "valid" ? "default" : "secondary"}>{item.status}</Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
