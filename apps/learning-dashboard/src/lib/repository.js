@@ -718,23 +718,29 @@ export async function getStepsForMilestone(milestoneId) {
 }
 
 export async function saveStepNotes(stepId, notes) {
-  const { client, mode } = await loadStore();
+  const { client, mode, store } = await loadStore();
   if (mode === "supabase" && client) {
     const { error } = await client.from("steps").update({ notes }).eq("id", stepId);
     if (error) throw new Error(error.message);
   }
-  const { store } = await loadStore();
   const step = (store.steps || []).find((s) => s.id === stepId);
   if (step) step.notes = notes;
   return { ok: true };
 }
 
 export async function toggleStepComplete(stepId) {
-  const { store } = await loadStore();
+  const { store, client, mode } = await loadStore();
   const step = (store.steps || []).find((s) => s.id === stepId);
   if (!step) return null;
   step.completed = !step.completed;
   step.completedAt = step.completed ? nowIso() : null;
+  if (mode === "supabase" && client) {
+    const { error } = await client.from("steps").update({
+      completed: step.completed,
+      completed_at: step.completedAt,
+    }).eq("id", stepId);
+    if (error) console.error("toggle error:", error.message);
+  }
   return step;
 }
 
