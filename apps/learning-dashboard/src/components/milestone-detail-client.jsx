@@ -209,13 +209,11 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
   }
 
   return (
-    <div className="flex gap-0 min-h-[calc(100vh-120px)]">
+    <div className="flex min-h-[calc(100vh-100px)]">
       {/* Main content */}
-      <div className="flex-1 py-2 pr-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight mb-1">{milestone.title}</h1>
-          <p className="text-sm text-muted-foreground">{milestone.theoryMarkdown}</p>
-        </div>
+      <div className="flex-1 min-w-0 pr-8">
+        <h1 className="text-xl font-bold tracking-tight mb-1">{milestone.title}</h1>
+        <p className="text-sm text-muted-foreground mb-6">{milestone.theoryMarkdown}</p>
 
         {selectedStep && (
           <StepContent step={selectedStep} onToggle={handleToggle}
@@ -223,53 +221,49 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
         )}
       </div>
 
-      {/* Right sidebar - sticky step list */}
-      <div className="w-72 shrink-0 border-l border-border/30 pl-6">
-        <div className="sticky top-4 space-y-4">
-          {/* Progress */}
-          <div className="space-y-2">
+      {/* Right sidebar - full height sticky like left nav */}
+      <aside className="w-60 shrink-0 border-l border-border/30">
+        <div className="sticky top-0 h-screen overflow-y-auto py-4 pl-4 pr-2">
+          <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Progress</span>
-              <span className="font-medium">{completedCount}/{steps.length}</span>
+              <span className="font-medium tabular-nums">{completedCount}/{steps.length}</span>
             </div>
             <Progress value={progressPct} className="h-1.5" />
           </div>
 
-          {/* Step list */}
           <div className="space-y-0.5">
             {steps.map((step, i) => {
               const isSelected = selectedStep?.id === step.id;
               return (
                 <button key={step.id} onClick={() => setSelectedStep(step)}
                   className={cn(
-                    "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors",
+                    "w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors",
                     isSelected ? "bg-emerald-950/30 text-foreground" : "hover:bg-muted/50 text-muted-foreground",
                   )}>
-                  {/* Completion indicator - click to toggle */}
-                  <button onClick={(e) => { e.stopPropagation(); handleToggle(step.id); }}
-                    className="shrink-0 hover:scale-110 transition-transform">
+                  <span onClick={(e) => { e.stopPropagation(); handleToggle(step.id); }}
+                    className="shrink-0 hover:scale-110 transition-transform cursor-pointer">
                     {step.completed
-                      ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                       : <span className={cn(
-                          "w-4 h-4 rounded-full border text-[10px] flex items-center justify-center",
-                          isSelected ? "border-emerald-500 text-emerald-500" : "border-muted-foreground/40 hover:border-muted-foreground"
+                          "w-3.5 h-3.5 rounded-full border text-[9px] flex items-center justify-center",
+                          isSelected ? "border-emerald-500 text-emerald-500" : "border-muted-foreground/40"
                         )}>{i + 1}</span>
                     }
-                  </button>
-                  {/* Step info */}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className={cn(
-                      "text-xs font-medium truncate",
+                      "text-[11px] font-medium truncate leading-tight",
                       step.completed && "line-through opacity-60"
                     )}>{step.title}</p>
-                    <p className="text-[10px] text-muted-foreground capitalize">{step.type}</p>
+                    <p className="text-[9px] text-muted-foreground capitalize">{step.type}</p>
                   </div>
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

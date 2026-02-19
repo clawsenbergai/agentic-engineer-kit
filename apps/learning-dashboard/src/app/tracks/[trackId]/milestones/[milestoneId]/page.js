@@ -1,41 +1,24 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getMilestoneById } from "@/lib/repository";
 import { MilestoneDetailClient } from "@/components/milestone-detail-client";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 
 export default async function MilestoneDetailPage({ params }) {
   const { trackId, milestoneId } = await params;
   const data = await getMilestoneById(milestoneId);
-
   if (!data) notFound();
-
   const { milestone, track, steps, evidence, gaps } = data;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/tracks/${trackId}`}>{track?.name || trackId}</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{milestone.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <nav className="text-xs text-muted-foreground">
+        <Link href="/" className="hover:text-foreground">Dashboard</Link>
+        {" → "}
+        <Link href={`/tracks/${trackId}`} className="hover:text-foreground">{track?.name || trackId}</Link>
+        {" → "}
+        <span className="text-foreground">{milestone.title}</span>
+      </nav>
 
       <MilestoneDetailClient
         milestone={milestone}
