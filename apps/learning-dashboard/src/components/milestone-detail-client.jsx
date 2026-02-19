@@ -141,17 +141,7 @@ function StepContent({ step, onToggle, onQuizSubmit, isSubmitting }) {
         </p>
       )}
 
-      {/* Mark complete button */}
-      {step.type !== "quiz" && (
-        <div className="pt-4 border-t border-border/30">
-          <Button variant={step.completed ? "outline" : "default"} size="sm"
-            onClick={() => onToggle(step.id)} className="gap-2">
-            {step.completed
-              ? <><CheckCircle2 className="h-4 w-4" /> Completed</>
-              : <><Circle className="h-4 w-4" /> Mark as complete</>}
-          </Button>
-        </div>
-      )}
+      {/* Evidence */}
     </div>
   );
 }
@@ -255,14 +245,17 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
                     "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors",
                     isSelected ? "bg-emerald-950/30 text-foreground" : "hover:bg-muted/50 text-muted-foreground",
                   )}>
-                  {/* Completion indicator */}
-                  {step.completed
-                    ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                    : <span className={cn(
-                        "w-4 h-4 rounded-full border text-[10px] flex items-center justify-center shrink-0",
-                        isSelected ? "border-emerald-500 text-emerald-500" : "border-muted-foreground/40"
-                      )}>{i + 1}</span>
-                  }
+                  {/* Completion indicator - click to toggle */}
+                  <button onClick={(e) => { e.stopPropagation(); handleToggle(step.id); }}
+                    className="shrink-0 hover:scale-110 transition-transform">
+                    {step.completed
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      : <span className={cn(
+                          "w-4 h-4 rounded-full border text-[10px] flex items-center justify-center",
+                          isSelected ? "border-emerald-500 text-emerald-500" : "border-muted-foreground/40 hover:border-muted-foreground"
+                        )}>{i + 1}</span>
+                    }
+                  </button>
                   {/* Step info */}
                   <div className="min-w-0 flex-1">
                     <p className={cn(
