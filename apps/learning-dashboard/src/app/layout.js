@@ -1,7 +1,8 @@
 import { Geist } from "next/font/google";
 import "./globals.css";
 
-import { DashboardShell } from "@/components/dashboard-shell";
+import { Toaster } from "@/components/ui/sonner";
+import { AppSidebar } from "@/components/app-sidebar";
 import { getDashboardSummary, getTracks } from "@/lib/repository";
 
 const geist = Geist({
@@ -21,10 +22,16 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className={`${geist.variable} app-body`}>
-        <DashboardShell tracks={tracks} overallScore={summary.overallScore}>
-          {children}
-        </DashboardShell>
+      <body className={`${geist.variable} font-[family-name:var(--font-geist)] antialiased`}>
+        <div className="flex min-h-screen">
+          <AppSidebar tracks={tracks} overallScore={summary.overallScore} />
+          <main className="flex-1 overflow-auto">
+            <div className="mx-auto max-w-5xl px-6 py-6">
+              {children}
+            </div>
+          </main>
+        </div>
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   );

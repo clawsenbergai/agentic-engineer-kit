@@ -357,6 +357,37 @@ async function persistDerivedState(client, derived) {
   });
 }
 
+function findFirstIncompleteStep(tracks, milestones, steps) {
+  // Sort tracks by order
+  const sortedTracks = [...tracks].sort((a, b) => a.orderIndex - b.orderIndex);
+  
+  for (const track of sortedTracks) {
+    // Get milestones for this track, sorted by order
+    const trackMilestones = milestones
+      .filter(m => m.trackId === track.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    
+    for (const milestone of trackMilestones) {
+      // Get steps for this milestone, sorted by order
+      const milestoneSteps = steps
+        .filter(s => s.milestoneId === milestone.id)
+        .sort((a, b) => a.orderIndex - b.orderIndex);
+      
+      // Find first incomplete step
+      const incompleteStep = milestoneSteps.find(step => !step.completed);
+      if (incompleteStep) {
+        return {
+          step: incompleteStep,
+          milestone,
+          track
+        };
+      }
+    }
+  }
+  
+  return null; // All steps completed
+}
+
 export async function getDashboardSummary() {
   const { store, client } = await loadStore();
   const derived = computeDashboardState({
@@ -369,12 +400,40 @@ export async function getDashboardSummary() {
 
   await persistDerivedState(client, derived);
 
+  const enrichedTracks = derived.tracks.map((track) => {
+    const trackMilestones = derived.milestones.filter((m) => m.trackId === track.id);
+    const trackSteps = (store.steps || []).filter(s => 
+      trackMilestones.some(m => m.id === s.milestoneId)
+    );
+    const completedSteps = trackSteps.filter(s => s.completed).length;
+    
+    return {
+      ...track,
+      milestoneCount: trackMilestones.length,
+      completedMilestoneCount: trackMilestones.filter((m) => m.status === "completed").length,
+      stepCount: trackSteps.length,
+      completedStepCount: completedSteps,
+      stepProgressPct: trackSteps.length > 0 ? (completedSteps / trackSteps.length) * 100 : 0,
+    };
+  });
+
+  // Find first incomplete step
+  const continueFrom = findFirstIncompleteStep(derived.tracks, derived.milestones, store.steps || []);
+  
+  // Calculate total step progress
+  const totalSteps = (store.steps || []).length;
+  const completedSteps = (store.steps || []).filter(s => s.completed).length;
+
   return {
     overallScore: derived.overallScore,
     weights: derived.weights,
-    tracks: derived.tracks,
+    tracks: enrichedTracks,
     gapCount: derived.gaps.length,
     nextAction: derived.nextAction,
+    continueFrom,
+    totalSteps,
+    completedSteps,
+    stepProgressPct: totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0,
   };
 }
 
@@ -388,7 +447,14 @@ export async function getTracks() {
     trackWeights: store.trackWeights,
   });
 
-  return derived.tracks;
+  return derived.tracks.map((track) => {
+    const trackMilestones = derived.milestones.filter((m) => m.trackId === track.id);
+    return {
+      ...track,
+      milestoneCount: trackMilestones.length,
+      completedMilestoneCount: trackMilestones.filter((m) => m.status === "completed").length,
+    };
+  });
 }
 
 export async function getTrackById(trackId) {
@@ -624,4 +690,43 @@ export async function getAllEvidence() {
         store.milestones.find((milestone) => milestone.id === artifact.milestoneId)?.title || artifact.milestoneId,
     }))
     .sort((a, b) => Date.parse(b.updatedAt || b.createdAt) - Date.parse(a.updatedAt || a.createdAt));
+}
+
+export async function getStepsForMilestone(milestoneId) {
+  const { store } = await loadStore();
+  return (store.steps || [])
+    .filter((step) => step.milestoneId === milestoneId)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+export async function toggleStepComplete(stepId) {
+  const { store } = await loadStore();
+  const step = (store.steps || []).find((s) => s.id === stepId);
+  if (!step) return null;
+  step.completed = !step.completed;
+  step.completedAt = step.completed ? nowIso() : null;
+  return step;
+}
+
+export async function getMilestoneById(milestoneId) {
+  const { store } = await loadStore();
+  const derived = computeDashboardState({
+    tracks: store.tracks,
+    milestones: store.milestones,
+    artifacts: store.artifacts,
+    quizResponses: store.quizResponses,
+    trackWeights: store.trackWeights,
+  });
+
+  const milestone = derived.milestones.find((m) => m.id === milestoneId);
+  if (!milestone) return null;
+
+  const track = derived.tracks.find((t) => t.id === milestone.trackId);
+  const steps = (store.steps || [])
+    .filter((s) => s.milestoneId === milestoneId)
+    .sort((a, b) => a.orderIndex - b.orderIndex);
+  const evidence = store.artifacts.filter((a) => a.milestoneId === milestoneId);
+  const gaps = derived.gaps.filter((g) => g.milestoneId === milestoneId);
+
+  return { milestone, track, steps, evidence, gaps };
 }

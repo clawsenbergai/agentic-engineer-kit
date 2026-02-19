@@ -150,6 +150,21 @@ CREATE TABLE IF NOT EXISTS learning.provider_runs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS learning.steps (
+  id TEXT PRIMARY KEY,
+  milestone_id TEXT NOT NULL REFERENCES learning.milestones(id) ON DELETE CASCADE,
+  order_index INTEGER NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('read', 'watch', 'article', 'setup', 'build', 'quiz', 'evidence')),
+  title TEXT NOT NULL,
+  content_markdown TEXT,
+  url TEXT,
+  validation_command TEXT,
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS learning.owner_profile (
   singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton),
   owner_user_id UUID NOT NULL,
@@ -194,7 +209,12 @@ DROP TRIGGER IF EXISTS set_updated_at_reflections ON learning.reflections;
 CREATE TRIGGER set_updated_at_reflections BEFORE UPDATE ON learning.reflections
 FOR EACH ROW EXECUTE FUNCTION learning.set_updated_at();
 
+DROP TRIGGER IF EXISTS set_updated_at_steps ON learning.steps;
+CREATE TRIGGER set_updated_at_steps BEFORE UPDATE ON learning.steps
+FOR EACH ROW EXECUTE FUNCTION learning.set_updated_at();
+
 CREATE INDEX IF NOT EXISTS idx_learning_milestones_track ON learning.milestones(track_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_learning_steps_milestone ON learning.steps(milestone_id, order_index);
 CREATE INDEX IF NOT EXISTS idx_learning_artifacts_track ON learning.artifacts(track_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_learning_artifacts_milestone ON learning.artifacts(milestone_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_learning_quiz_responses_milestone ON learning.quiz_responses(milestone_id, created_at DESC);
@@ -204,6 +224,7 @@ CREATE INDEX IF NOT EXISTS idx_learning_recommendations_priority ON learning.rec
 -- Single-user baseline RLS (service role bypasses this for backend jobs).
 ALTER TABLE learning.tracks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning.milestones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learning.steps ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning.artifacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning.evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE learning.quiz_questions ENABLE ROW LEVEL SECURITY;
@@ -232,7 +253,7 @@ DECLARE
   tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'milestones','artifacts','evaluations','quiz_questions','quiz_responses','progress_snapshots',
+    'milestones','steps','artifacts','evaluations','quiz_questions','quiz_responses','progress_snapshots',
     'gaps','recommendations','reflections','track_weights','provider_runs'
   ]
   LOOP
@@ -264,7 +285,8 @@ INSERT INTO learning.tracks (id, name, description, category, order_index) VALUE
   ('lang_orchestration', 'LangChain / LangGraph / LangSmith', 'Orchestration primitives with observability and eval loops.', 'core', 90),
   ('agent_payments', 'x402 / Agent Payments', 'Agent payment rails: crypto x402 and fiat AP2/UCP models.', 'elective', 100),
   ('agent_identity', 'ERC-8004 Identity', 'On-chain agent identity, delegation and trust boundaries.', 'elective', 110),
-  ('voice_agents', 'Voice Agents', 'Real-time voice agent stacks and operations.', 'later_phase', 120)
+  ('voice_agents', 'Voice Agents', 'Real-time voice agent stacks and operations.', 'later_phase', 120),
+  ('harness_engineering', 'Harness Engineering', 'System prompts, tools, middleware, self-verification loops, trace-driven improvement.', 'core', 125)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO learning.milestones (
@@ -288,7 +310,16 @@ INSERT INTO learning.milestones (
   ('webmcp_m2', 'webmcp', 'Fallback architecture', 'Design robust fallback to HTTP tools when WebMCP is unavailable.', 'Implement and verify fallback in mock route.', 'not_started', 20, true),
   ('lang_orchestration_m1', 'lang_orchestration', 'Graph orchestration patterns', 'Understand node boundaries and persisted state.', 'Model a planner-executor-critic graph with deterministic transitions.', 'not_started', 10, true),
   ('lang_orchestration_m2', 'lang_orchestration', 'Trace-driven eval loop', 'Use traces to drive prompt/policy improvements.', 'Run `node scripts/dashboard/mock-lang-eval-loop.mjs` and interpret promotion decision.', 'not_started', 20, true),
-  ('agent_payments_m1', 'agent_payments', 'Budget lock and spend controls', 'Understand pay-per-tool-call controls and cap enforcement.', 'Run `node scripts/dashboard/mock-payment-gating.mjs`.', 'not_started', 10, true),
-  ('agent_identity_m1', 'agent_identity', 'Identity assertion policy', 'Understand trust boundary for delegated identity.', 'Run `node scripts/dashboard/mock-identity-policy.mjs`.', 'not_started', 10, true),
-  ('voice_agents_m1', 'voice_agents', 'Latency and handoff guardrails', 'Understand latency budgets and uncertainty handoffs.', 'Run `node scripts/dashboard/mock-voice-latency.mjs`.', 'not_started', 10, true)
+  ('agent_payments_m1', 'agent_payments', 'x402 Buyer Pattern', 'Set up a wallet and make x402 payments to agent services.', 'Run `node scripts/dashboard/mock-payment-gating.mjs` and make a real x402 payment.', 'not_started', 10, true),
+  ('agent_payments_m2', 'agent_payments', 'x402 Seller Pattern', 'Build an API with x402 payment middleware.', 'Create a simple API that requires x402 payments and test it.', 'not_started', 20, true),
+  ('agent_payments_m3', 'agent_payments', 'Budget Controls & Monitoring', 'Implement spend controls and payment monitoring.', 'Build budget enforcement and alerting for agent payment flows.', 'not_started', 30, true),
+  ('agent_identity_m1', 'agent_identity', 'ERC-8004 Identity Standard', 'Learn the agent identity specification and registry pattern.', 'Read the EIP-8004 specification thoroughly.', 'not_started', 10, true),
+  ('agent_identity_m2', 'agent_identity', 'Agent Registration File', 'Create and deploy an agent identity file.', 'Build and deploy a `.well-known/agent.json` file for identity verification.', 'not_started', 20, true),
+  ('agent_identity_m3', 'agent_identity', 'Trust Boundaries & Delegation', 'Implement delegation and revocation controls.', 'Build a trust boundary system with delegation capabilities.', 'not_started', 30, true),
+  ('voice_agents_m1', 'voice_agents', 'Real-time Voice Architecture', 'Understand voice agent latency budgets and streaming.', 'Run `node scripts/dashboard/mock-voice-latency.mjs` and analyze latency patterns.', 'not_started', 10, true),
+  ('voice_agents_m2', 'voice_agents', 'Voice Quality & Compliance', 'Learn voice quality metrics and compliance requirements.', 'Implement voice quality monitoring and compliance checks.', 'not_started', 20, true),
+  ('voice_agents_m3', 'voice_agents', 'Voice Agent Operations', 'Understand production voice agent deployment and monitoring.', 'Build a production-ready voice agent with monitoring and alerting.', 'not_started', 30, true),
+  ('harness_engineering_m1', 'harness_engineering', 'Harness Engineering Fundamentals', 'System prompts, tools, middleware - the knobs you turn for agent behavior.', 'Build a basic harness with progressive disclosure pattern.', 'not_started', 10, true),
+  ('harness_engineering_m2', 'harness_engineering', 'Self-Verification & Trace Analysis', 'Build-verify-fix loops and trace-driven improvement.', 'Set up LangSmith tracing and build a self-verification workflow.', 'not_started', 20, true),
+  ('harness_engineering_m3', 'harness_engineering', 'Repository as System of Record', 'Agent-first repository design with AGENTS.md and entropy management.', 'Design and implement an agent-first repository structure.', 'not_started', 30, true)
 ON CONFLICT (id) DO NOTHING;
