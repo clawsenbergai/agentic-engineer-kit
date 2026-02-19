@@ -32,27 +32,43 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Hero */}
-      <Card className="border-border/50 bg-gradient-to-br from-card to-background">
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-card to-background shadow-lg">
         <CardContent className="flex items-center justify-between p-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight tabular-nums">
-              {Math.round(overallScore)}%
-            </h1>
-            <p className="text-muted-foreground">
-              Overall capability score
-            </p>
-            {totalSteps > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {completedSteps}/{totalSteps} steps completed
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <h1 className="text-5xl font-bold tracking-tight tabular-nums text-primary">
+                {Math.round(overallScore)}%
+              </h1>
+              {overallScore === 0 && (
+                <div className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Ready to start!</span>
+                </div>
+              )}
+            </div>
+            <div className="space-y-1">
+              <p className="text-lg font-medium text-foreground">
+                Overall capability score
               </p>
-            )}
-            {gapCount > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {gapCount} open {gapCount === 1 ? "gap" : "gaps"} to resolve
+              {totalSteps > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {completedSteps}/{totalSteps} steps completed • {Math.round((completedSteps / totalSteps) * 100)}% progress
+                </p>
+              )}
+              {gapCount > 0 && completedSteps > 0 && (
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  {gapCount} open {gapCount === 1 ? "gap" : "gaps"} to resolve
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <ProgressRing score={overallScore} size={140} strokeWidth={10} />
+            {overallScore === 0 && (
+              <p className="text-xs text-muted-foreground text-center max-w-[140px]">
+                Start your first track to see progress
               </p>
             )}
           </div>
-          <ProgressRing score={overallScore} size={140} strokeWidth={10} />
         </CardContent>
       </Card>
 
@@ -93,9 +109,9 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {/* Next best action */}
-      {nextAction && (
-        <Card className="border-primary/20 bg-primary/5">
+      {/* Next best action - only show if there's actual progress or clear next steps */}
+      {nextAction && nextAction.priority > 0 && completedSteps > 0 && (
+        <Card className="border-primary/20 bg-primary/5 hover:border-primary/30 transition-colors">
           <CardContent className="flex items-center justify-between p-5">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
@@ -108,7 +124,7 @@ export default async function DashboardPage() {
                 <p className="text-sm font-medium">{nextAction.actionText}</p>
               </div>
             </div>
-            <Button asChild size="sm" className="gap-1">
+            <Button asChild size="sm" className="gap-1 shadow-sm">
               <Link href={nextAction.ctaPath}>
                 Go <ArrowRight className="h-4 w-4" />
               </Link>
@@ -119,8 +135,8 @@ export default async function DashboardPage() {
 
       {/* Track grid */}
       <div>
-        <h2 className="mb-4 text-lg font-semibold tracking-tight">Tracks</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <h2 className="mb-6 text-xl font-semibold tracking-tight">Learning Tracks</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {tracks.map((track) => {
             const steps = track.stepCount || 0;
             const completedSteps = track.completedStepCount || 0;
@@ -128,23 +144,36 @@ export default async function DashboardPage() {
             
             return (
               <Link key={track.id} href={`/tracks/${track.id}`}>
-                <Card className="group h-full border-border/50 transition-all hover:border-border hover:-translate-y-0.5 hover:shadow-lg">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-semibold">{track.name}</CardTitle>
+                <Card className="group h-full border-border/50 transition-all duration-200 hover:border-primary/30 hover:-translate-y-1 hover:shadow-xl">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm leading-tight text-foreground group-hover:text-primary transition-colors">
+                          {track.name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          {track.description}
+                        </p>
+                      </div>
                       {statusBadge(track.status)}
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {track.description}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Progress value={progressPct} className="h-1.5" />
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-medium tabular-nums">{Math.round(progressPct)}%</span>
-                      {steps > 0 && (
-                        <span>{completedSteps}/{steps} steps</span>
-                      )}
+                    
+                    <div className="space-y-2">
+                      <Progress value={progressPct} className="h-1.5" />
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium tabular-nums text-primary">
+                          {Math.round(progressPct)}%
+                        </span>
+                        {steps > 0 ? (
+                          <span className="text-muted-foreground">
+                            {completedSteps}/{steps} steps
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {track.milestoneCount || 0} milestones
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

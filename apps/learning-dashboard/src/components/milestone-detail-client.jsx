@@ -53,7 +53,7 @@ function YouTubeEmbed({ url }) {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+        className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
       >
         <ExternalLink className="h-3.5 w-3.5" />
         Watch video
@@ -62,14 +62,16 @@ function YouTubeEmbed({ url }) {
   }
   
   return (
-    <div className="aspect-video w-full overflow-hidden rounded-lg border border-border/50">
-      <iframe
-        src={`https://www.youtube.com/embed/${videoId}`}
-        className="h-full w-full"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        title="Video content"
-      />
+    <div className="max-w-[560px] w-full">
+      <div className="aspect-video overflow-hidden rounded-lg border border-border/50 shadow-sm">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="Video content"
+        />
+      </div>
     </div>
   );
 }
@@ -92,40 +94,40 @@ function StepCard({ step, onToggle, onQuizSubmit, isSubmitting, isCurrentStep })
 
   return (
     <Card className={cn(
-      "border-border/50 transition-all relative",
+      "border-border/50 transition-all relative hover:shadow-sm",
       step.completed && "border-primary/20 bg-primary/5",
-      isCurrentStep && "border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+      isCurrentStep && "border-l-4 border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm"
     )}>
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex items-start gap-3">
           {/* Completion checkbox */}
           {step.type !== "quiz" && (
             <button
               onClick={() => onToggle(step.id)}
-              className="mt-0.5 text-muted-foreground transition-colors hover:text-primary"
+              className="mt-1 text-muted-foreground transition-colors hover:text-primary flex-shrink-0"
             >
               {step.completed ? (
-                <Check className="h-5 w-5 text-primary" />
+                <Check className="h-4 w-4 text-primary" />
               ) : (
-                <Square className="h-5 w-5" />
+                <Square className="h-4 w-4" />
               )}
             </button>
           )}
 
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-2">
             {/* Header */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm">{STEP_EMOJI[step.type]}</span>
-              <Badge variant="outline" className="text-xs capitalize">
+              <Badge variant="outline" className="text-xs capitalize px-1.5 py-0.5">
                 {step.type}
               </Badge>
               {isCurrentStep && (
-                <Badge className="text-xs bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-100 dark:border-emerald-700">
+                <Badge className="text-xs bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900 dark:text-emerald-100 dark:border-emerald-700 px-2 py-0.5">
                   ← You are here
                 </Badge>
               )}
               <h3 className={cn(
-                "text-sm font-medium",
+                "text-sm font-medium text-foreground",
                 step.completed && "line-through text-muted-foreground"
               )}>
                 {step.title}
@@ -150,7 +152,15 @@ function StepCard({ step, onToggle, onQuizSubmit, isSubmitting, isCurrentStep })
 
             {/* Markdown content */}
             {step.contentMarkdown && (
-              <div className="prose prose-invert prose-sm max-w-none text-sm leading-relaxed text-muted-foreground [&_h2]:text-foreground [&_h3]:text-foreground [&_strong]:text-foreground [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3">
+              <div className="prose prose-invert prose-sm max-w-none text-sm leading-relaxed text-muted-foreground 
+                [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:text-foreground [&_h1]:mt-4 [&_h1]:mb-2
+                [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_h2]:mt-3 [&_h2]:mb-1.5
+                [&_h3]:text-sm [&_h3]:font-medium [&_h3]:text-foreground [&_h3]:mt-2 [&_h3]:mb-1
+                [&_p]:my-2 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-0.5
+                [&_strong]:text-foreground [&_strong]:font-medium
+                [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-xs [&_code]:font-mono
+                [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:my-3 [&_pre]:text-xs
+                [&_blockquote]:border-l-2 [&_blockquote]:border-primary/30 [&_blockquote]:pl-3 [&_blockquote]:italic">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {step.contentMarkdown}
                 </ReactMarkdown>
@@ -169,39 +179,53 @@ function StepCard({ step, onToggle, onQuizSubmit, isSubmitting, isCurrentStep })
 
             {/* Quiz: answer textarea + submit */}
             {step.type === "quiz" && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-1">
                 {quizResult ? (
-                  <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+                  <div className="space-y-3 rounded-lg border border-border bg-card p-4 shadow-sm">
                     <div className="flex items-center gap-2">
                       <Badge variant={quizResult.score >= 70 ? "default" : quizResult.score >= 50 ? "outline" : "destructive"}>
-                        Score: {quizResult.score}
+                        Score: {quizResult.score}/100
                       </Badge>
+                      {quizResult.score >= 70 && <span className="text-sm text-emerald-600 dark:text-emerald-400">✓ Passed</span>}
                     </div>
-                    <p className="text-sm text-muted-foreground">{quizResult.feedback}</p>
+                    <div className="text-sm text-muted-foreground leading-relaxed">
+                      <strong className="text-foreground">Feedback:</strong><br />
+                      {quizResult.feedback}
+                    </div>
                   </div>
                 ) : (
-                  <>
-                    <Textarea
-                      placeholder="Write your answer here (minimum 20 characters)..."
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      className="min-h-[120px] resize-y"
-                    />
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-foreground">Your Answer:</label>
+                      <Textarea
+                        placeholder="Write your answer here (minimum 20 characters)..."
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        className="min-h-[120px] resize-y text-sm leading-relaxed"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {answer.length}/20 characters minimum
+                      </p>
+                    </div>
                     <Button
                       onClick={handleQuizSubmit}
                       disabled={isSubmitting || answer.trim().length < 20}
                       size="sm"
+                      className="gap-2"
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Scoring...
                         </>
                       ) : (
-                        "Submit Answer"
+                        <>
+                          <HelpCircle className="h-4 w-4" />
+                          Submit Answer
+                        </>
                       )}
                     </Button>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -297,42 +321,69 @@ export function MilestoneDetailClient({ milestone, track, initialSteps, evidence
   }, [milestone]);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="space-y-3">
-        <h1 className="text-2xl font-bold tracking-tight">{milestone.title}</h1>
-        <p className="text-sm text-muted-foreground">{milestone.theoryMarkdown}</p>
-        <div className="flex items-center gap-4">
-          <Progress value={progressPct} className="h-2 flex-1" />
-          <span className="text-sm font-medium tabular-nums text-muted-foreground">
-            {completedCount}/{steps.length}
-          </span>
+    <div className="max-w-4xl mx-auto">
+      <div className="flex flex-col gap-8">
+        {/* Header - Course lesson style */}
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">{milestone.title}</h1>
+            {milestone.theoryMarkdown && (
+              <div className="prose prose-invert prose-base max-w-none text-muted-foreground leading-relaxed">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {milestone.theoryMarkdown}
+                </ReactMarkdown>
+              </div>
+            )}
+          </div>
+          
+          {/* Progress section */}
+          <div className="bg-card/50 border border-border/50 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-foreground">Lesson Progress</span>
+              <span className="text-sm font-medium tabular-nums text-primary">
+                {completedCount}/{steps.length} completed
+              </span>
+            </div>
+            <Progress value={progressPct} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              Complete all steps to finish this milestone
+            </p>
+          </div>
         </div>
-      </div>
 
-      <Separator />
-
-      {/* Steps */}
-      <div className="flex flex-col gap-3">
-        {steps.map((step) => (
-          <StepCard
-            key={step.id}
-            step={step}
-            onToggle={handleToggle}
-            onQuizSubmit={handleQuizSubmit}
-            isSubmitting={isSubmitting}
-            isCurrentStep={currentStep && currentStep.id === step.id}
-          />
-        ))}
-        {steps.length === 0 && (
-          <Card className="border-dashed">
-            <CardContent className="flex items-center justify-center p-8">
-              <p className="text-sm text-muted-foreground">
-                No steps defined for this milestone yet.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {/* Steps - Lesson content */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-foreground">Lesson Steps</h2>
+          <div className="flex flex-col gap-2">
+            {steps.map((step, index) => (
+              <div key={step.id} className="relative">
+                {/* Step number indicator */}
+                <div className="absolute -left-8 top-3 w-6 h-6 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">{index + 1}</span>
+                </div>
+                <StepCard
+                  step={step}
+                  onToggle={handleToggle}
+                  onQuizSubmit={handleQuizSubmit}
+                  isSubmitting={isSubmitting}
+                  isCurrentStep={currentStep && currentStep.id === step.id}
+                />
+              </div>
+            ))}
+            {steps.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <BookOpen className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      No steps defined for this milestone yet.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -93,4 +93,81 @@
         @apply bg-background text-foreground antialiased;
         font-feature-settings: "rlig" 1, "calt" 1;
     }
+    
+    /* Typography improvements */
+    h1, h2, h3, h4, h5, h6 {
+        font-feature-settings: "cv03" 1, "cv04" 1;
+        letter-spacing: -0.015em;
+    }
+    
+    /* Improved focus states */
+    button:focus-visible,
+    [role="button"]:focus-visible,
+    a:focus-visible {
+        @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+    }
+    
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Better line height for readability */
+    .prose {
+        line-height: 1.7;
+    }
+}
+
+@layer components {
+    /* Improved card hover effects */
+    .card-hover {
+        @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+    }
+    
+    .card-hover-primary {
+        @apply transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5 hover:border-primary/30;
+    }
+    
+    /* Loading states */
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+        100% {
+            background-position: 200% 0;
+        }
+    }
+    
+    .shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+    
+    /* Better progress indicators */
+    .progress-glow {
+        filter: drop-shadow(0 0 4px oklch(0.72 0.17 160 / 0.3));
+    }
+    
+    /* Line clamp utilities */
+    .line-clamp-1 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+    }
+    
+    .line-clamp-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+    }
+    
+    .line-clamp-3 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
+    }
 }

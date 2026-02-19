@@ -194,11 +194,23 @@ function gapSeverityWeight(severity) {
 }
 
 export function rankNextActions(gaps, milestones, tracks) {
-  const openGaps = gaps.filter((gap) => gap.status === "open");
-  if (!openGaps.length) {
-    const firstTrack = tracks[0];
-    const fallbackMilestone = milestones.find((m) => m.trackId === firstTrack?.id);
-    if (!firstTrack || !fallbackMilestone) {
+  // Sort tracks by order to follow proper progression
+  const sortedTracks = [...tracks].sort((a, b) => a.orderIndex - b.orderIndex);
+  
+  // Check if any track has been started (has progress)
+  const hasStartedTracks = tracks.some(track => {
+    const trackMilestones = milestones.filter(m => m.trackId === track.id);
+    return trackMilestones.some(m => m.status !== STATUS.MILESTONE.NOT_STARTED);
+  });
+  
+  // If nothing has been started, recommend the first track's first milestone
+  if (!hasStartedTracks) {
+    const firstTrack = sortedTracks[0];
+    const firstMilestone = milestones
+      .filter(m => m.trackId === firstTrack?.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex)[0];
+      
+    if (!firstTrack || !firstMilestone) {
       return {
         actionText: "Seed milestones and evidence to start scoring.",
         ctaPath: "/tracks",
@@ -206,35 +218,54 @@ export function rankNextActions(gaps, milestones, tracks) {
       };
     }
     return {
-      actionText: `Start ${firstTrack.name}: ${fallbackMilestone.title}`,
-      ctaPath: `/tracks/${firstTrack.id}`,
-      priority: 40,
+      actionText: `Start ${firstTrack.name}: ${firstMilestone.title}`,
+      ctaPath: `/tracks/${firstTrack.id}/milestones/${firstMilestone.id}`,
+      priority: 100,
     };
   }
-
-  const enriched = openGaps.map((gap) => {
-    const relatedMilestone = milestones.find((m) => m.id === gap.milestoneId);
-    const relatedTrack = tracks.find((t) => t.id === gap.trackId);
-    let priority = gapSeverityWeight(gap.severity);
-
-    if (relatedMilestone?.status === STATUS.MILESTONE.COMPLETED_CANDIDATE) priority += 15;
-    if (gap.title.toLowerCase().includes("quiz")) priority += 10;
-
-    return {
-      ...gap,
-      priority,
-      ctaPath: relatedTrack ? `/tracks/${relatedTrack.id}` : "/tracks",
-      actionText: relatedMilestone
-        ? `${relatedTrack?.name ?? "Track"}: ${relatedMilestone.title} -> ${gap.title}`
-        : `${relatedTrack?.name ?? "Track"}: ${gap.title}`,
-    };
-  });
-
-  const [best] = enriched.sort((a, b) => b.priority - a.priority);
+  
+  // Find next logical milestone to work on (based on track order)
+  for (const track of sortedTracks) {
+    const trackMilestones = milestones
+      .filter(m => m.trackId === track.id)
+      .sort((a, b) => a.orderIndex - b.orderIndex);
+    
+    // Find first non-completed milestone in this track
+    const nextMilestone = trackMilestones.find(m => 
+      m.status !== STATUS.MILESTONE.COMPLETED
+    );
+    
+    if (nextMilestone) {
+      // If milestone has critical gaps (quiz needed, etc), prioritize those
+      const criticalGaps = gaps.filter(gap => 
+        gap.milestoneId === nextMilestone.id && 
+        gap.status === "open" &&
+        (gap.title.toLowerCase().includes("quiz") || gap.severity === "high")
+      );
+      
+      if (criticalGaps.length > 0) {
+        const gap = criticalGaps[0];
+        return {
+          actionText: `${track.name}: ${nextMilestone.title} → ${gap.title}`,
+          ctaPath: `/tracks/${track.id}/milestones/${nextMilestone.id}`,
+          priority: 90,
+        };
+      }
+      
+      // Otherwise, just recommend continuing with this milestone
+      return {
+        actionText: `Continue ${track.name}: ${nextMilestone.title}`,
+        ctaPath: `/tracks/${track.id}/milestones/${nextMilestone.id}`,
+        priority: 80,
+      };
+    }
+  }
+  
+  // All tracks completed
   return {
-    actionText: best.actionText,
-    ctaPath: best.ctaPath,
-    priority: best.priority,
+    actionText: "All tracks completed! Great work!",
+    ctaPath: "/tracks",
+    priority: 0,
   };
 }
 

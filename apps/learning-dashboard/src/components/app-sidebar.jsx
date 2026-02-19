@@ -64,9 +64,11 @@ export function AppSidebar({ tracks, overallScore }) {
               >
                 <div className={cn("h-2 w-2 rounded-full shrink-0", statusColor(track.status))} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium leading-tight">{track.name}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
+                  <p className="font-medium leading-tight line-clamp-2 text-sm" title={track.name}>
+                    {track.name}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {track.stepProgressPct !== undefined 
                         ? `${Math.round(track.stepProgressPct)}%`
                         : `${Math.round(track.score)}%`}
@@ -74,7 +76,7 @@ export function AppSidebar({ tracks, overallScore }) {
                     {track.stepProgressPct !== undefined && (
                       <Progress 
                         value={track.stepProgressPct} 
-                        className="h-1 w-8" 
+                        className="h-1 flex-1 max-w-12" 
                       />
                     )}
                   </div>
