@@ -24,7 +24,7 @@ export default async function RootLayout({ children }) {
     <html lang="en">
       <body className={`${geist.variable} font-[family-name:var(--font-geist)] antialiased`}>
         <div className="flex min-h-screen">
-          <AppSidebar tracks={tracks} overallScore={summary.overallScore} />
+          <AppSidebar tracks={summary.tracks} overallScore={summary.stepProgressPct} />
           <main className="flex-1">
             <div className="mx-auto max-w-5xl px-6 py-6">
               {children}
