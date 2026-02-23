@@ -86,11 +86,18 @@ export const TRACKS = [
     orderIndex: 120,
   },
   {
+    id: "xmtp_messaging",
+    name: "XMTP Agent Messaging",
+    description: "Decentralized agent messaging, E2E encryption, group chats, agent discovery.",
+    category: "elective",
+    orderIndex: 125,
+  },
+  {
     id: "harness_engineering",
     name: "Harness Engineering",
     description: "System prompts, tools, middleware, self-verification loops, trace-driven improvement.",
     category: "core",
-    orderIndex: 125,
+    orderIndex: 130,
   },
 ];
 
@@ -137,6 +144,8 @@ export const MILESTONES = [
   m("voice_agents_m1", "voice_agents", "Real-time Voice Architecture", "Understand voice agent latency budgets and streaming.", "Run `node scripts/dashboard/mock-voice-latency.mjs` and analyze latency patterns.", 10),
   m("voice_agents_m2", "voice_agents", "Voice Quality & Compliance", "Learn voice quality metrics and compliance requirements.", "Implement voice quality monitoring and compliance checks.", 20),
   m("voice_agents_m3", "voice_agents", "Voice Agent Operations", "Understand production voice agent deployment and monitoring.", "Build a production-ready voice agent with monitoring and alerting.", 30),
+  m("xmtp_messaging_m1", "xmtp_messaging", "XMTP Fundamentals & First Agent", "Understand the XMTP protocol, E2E encryption, and decentralized messaging for agents.", "Build an XMTP agent with @xmtp/agent-sdk that handles commands and group chats.", 10),
+  m("xmtp_messaging_m2", "xmtp_messaging", "Agent Networks & Payments", "Multi-agent communication patterns, task delegation over XMTP, and payment integration.", "Build an agent swarm that delegates tasks via XMTP group chats with x402 payments.", 20),
   m("harness_engineering_m1", "harness_engineering", "Harness Engineering Fundamentals", "System prompts, tools, middleware - the knobs you turn for agent behavior.", "Build a basic harness with progressive disclosure pattern.", 10),
   m("harness_engineering_m2", "harness_engineering", "Self-Verification & Trace Analysis", "Build-verify-fix loops and trace-driven improvement.", "Set up LangSmith tracing and build a self-verification workflow.", 20),
   m("harness_engineering_m3", "harness_engineering", "Repository as System of Record", "Agent-first repository design with AGENTS.md and entropy management.", "Design and implement an agent-first repository structure.", 30),
@@ -838,6 +847,42 @@ A production-ready voice agent with proper monitoring and error handling.`,
   }),
   step("voice_m3_s4", "voice_agents_m3", 4, "evidence", "Link production deployment evidence", {
     contentMarkdown: "Link your production voice agent deployment or monitoring dashboard.",
+  }),
+
+  // ── XMTP Agent Messaging > M1: Fundamentals ──
+  step("xmtp_m1_s1", "xmtp_messaging_m1", 1, "read", "XMTP Documentation Overview", {
+    url: "https://docs.xmtp.org/",
+    contentMarkdown: "Official XMTP docs — understand the protocol architecture, end-to-end encryption, and decentralized messaging network.",
+  }),
+  step("xmtp_m1_s2", "xmtp_messaging_m1", 2, "read", "Build XMTP Agents", {
+    url: "https://docs.xmtp.org/agents/get-started/build-an-agent",
+    contentMarkdown: "Step-by-step guide to building your first XMTP agent using @xmtp/agent-sdk. Covers agent creation, message handling, and deployment.",
+  }),
+  step("xmtp_m1_s3", "xmtp_messaging_m1", 3, "read", "Base: Getting Started with Chat Agents", {
+    url: "https://docs.base.org/base-app/agents/getting-started",
+    contentMarkdown: "Base's guide to creating, testing, and deploying XMTP messaging agents. Practical wallet + messaging integration.",
+  }),
+  step("xmtp_m1_s4", "xmtp_messaging_m1", 4, "read", "XMTP Agent FAQ", {
+    url: "https://docs.xmtp.org/agents/get-started/faq",
+    contentMarkdown: "Common questions about XMTP agents: wallet integration, ENS resolution, ElizaOS plugin, group messaging, and more.",
+  }),
+  step("xmtp_m1_s5", "xmtp_messaging_m1", 5, "build", "Build an XMTP Echo Agent", {
+    contentMarkdown: "## Build an XMTP Agent\n\n1. `npm install @xmtp/agent-sdk`\n2. Create an agent with a wallet\n3. Handle incoming text messages and respond\n4. Implement commands: `/help`, `/whoami`, `/time`\n5. Handle group conversations\n6. Add rate limiting per sender address\n\n**Stretch:** Connect to an LLM, add tool calling, integrate x402 payments.",
+  }),
+  step("xmtp_m1_s6", "xmtp_messaging_m1", 6, "quiz", "Agent Messaging Architecture", {
+    contentMarkdown: "You're building a multi-agent system where 5 specialized agents collaborate. Why use XMTP over HTTP webhooks? What are the tradeoffs in latency, reliability, privacy, and discoverability?",
+  }),
+
+  // ── XMTP Agent Messaging > M2: Agent Networks & Payments ──
+  step("xmtp_m2_s1", "xmtp_messaging_m2", 1, "read", "XMTP Group Chat Documentation", {
+    url: "https://docs.xmtp.org/chat-apps/group-chat/create-group-chat",
+    contentMarkdown: "How group conversations work in XMTP — creating groups, managing members, permissions, and message types.",
+  }),
+  step("xmtp_m2_s2", "xmtp_messaging_m2", 2, "build", "Agent-to-Agent Task Delegation", {
+    contentMarkdown: "## Build an Agent Swarm on XMTP\n\n1. Create 3 agents: Coordinator, Researcher, Writer\n2. Coordinator receives topic, creates group chat\n3. Researcher posts findings, Writer creates summary\n4. All communication over XMTP (encrypted, decentralized)\n\n**Key patterns:** Structured JSON messages, task status tracking, offline handling, timeout strategies.",
+  }),
+  step("xmtp_m2_s3", "xmtp_messaging_m2", 3, "quiz", "XMTP + x402 Integration", {
+    contentMarkdown: "Design an agent marketplace: agents advertise on XMTP, get paid via x402. How does discovery, payment verification, and dispute resolution work? Sketch the full message flow.",
   }),
 
   // ── Harness Engineering > M1: Fundamentals ──

@@ -177,7 +177,24 @@
 - What metrics define voice quality at scale?
 - Which conversations must trigger human handoff?
 
-## Track 13: Business Capstones
+## Track 13: XMTP Agent Messaging (Elective)
+
+### Theory
+- Decentralized messaging protocol architecture
+- End-to-end encryption for agent communication
+- Group conversations and agent discovery
+- XMTP vs HTTP webhooks for inter-agent comms
+
+### Build
+- XMTP agent with @xmtp/agent-sdk (echo bot + commands)
+- Multi-agent task delegation over XMTP group chats
+- XMTP + x402 payment flow integration
+
+### Re-read Focus
+- When is decentralized messaging worth the latency tradeoff?
+- How do you handle offline agents and message queuing?
+
+## Track 14: Business Capstones
 - Ops/Portal autonomous improvement
 - Marketing automation with brand guardrails
 - Finance analysis with audit-grade controls
