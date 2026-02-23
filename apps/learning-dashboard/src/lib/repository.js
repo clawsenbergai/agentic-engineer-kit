@@ -222,14 +222,7 @@ async function ensureSupabaseSeed(client) {
   const { data: existingSteps } = await client.from("steps").select("id").limit(1);
   const needsStepSeed = !existingSteps || existingSteps.length === 0;
 
-  if (existingMilestones.length > 0 && !needsStepSeed) return;
-  if (existingMilestones.length > 0 && needsStepSeed) {
-    // Only seed steps
-    const { error: stepInsertError } = await client.from("steps").upsert(STEPS.map(toStepRow), { onConflict: "id" });
-    if (stepInsertError) throw new Error(`Cannot seed steps: ${stepInsertError.message}`);
-    return;
-  }
-
+  // Always upsert tracks, milestones, and steps to pick up new additions
   const { error: trackInsertError } = await client.from("tracks").upsert(TRACKS.map(toTrackRow), {
     onConflict: "id",
   });
